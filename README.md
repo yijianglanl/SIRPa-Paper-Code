@@ -19,3 +19,6 @@ This repository contains MATLAB and Python codes for modeling immunogenic cell d
 git clone https://https://github.com/yijianglanl/SIRPa-Paper-Code
 cd SIRPa-Paper-Code
 ```
+
+
+[![DOI](10.5281/zenodo.17559821)]
