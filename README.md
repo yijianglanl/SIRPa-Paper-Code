@@ -4,10 +4,18 @@
 
 * To appear in PNAS, 2025
 
-## This repository contains MATLAB and Python codes for modeling immunogenic cell death in combined radiation and immunotherapy. The ODE model uses parameter estimation, sensitivity analysis, and identifiability analysis. 
+## Overview
+
+This repository contains MATLAB and Python codes for modeling immunogenic cell death in combined radiation and immunotherapy. The ODE model uses parameter estimation, sensitivity analysis, and identifiability analysis. 
 
 ## Requirements
 
 - MATLAB R2020b or later
 - Python 3.12.0 or later
-  
+
+## Installation
+
+```bash
+git clone https://https://github.com/yijianglanl/SIRPa-Paper-Code
+cd SIRPa-Paper-Code
+```
