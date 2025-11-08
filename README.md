@@ -20,5 +20,4 @@ git clone https://https://github.com/yijianglanl/SIRPa-Paper-Code
 cd SIRPa-Paper-Code
 ```
 
-
-[![DOI](10.5281/zenodo.17559821)]
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17559821.svg)](https://doi.org/10.5281/zenodo.17559821) 
