@@ -1,0 +1,192 @@
+
+format long 
+
+warning('off','all')
+
+% Upper bounds for datasets
+m1 = 11;
+m2 = 11;
+m3 = 12;
+m4=16;
+% Lower bounds for datasets
+n1 =5;
+n2 = 5;
+n3 = 5;
+n4=5;
+load('../Data/it1d.txt');
+
+tdata = it1d(:, 1);
+Tdata1 = it1d(:, 2);
+Tdata2 = it1d(:, 3);
+Tdata3 = it1d(:, 4);
+Tdata4 = it1d(:, 5);
+st1 = it1d(:, 6);
+st2 = it1d(:, 7);
+st3 =it1d(:, 8);
+st4 =it1d(:, 9);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+lb = [1e-10 2.3e-4 1 1 1 1 1e5 1e5 1 0 1 ];
+ub = [1e-6 2.3e-1 2e8 2e8 1e8 1e8 1e7 1e7 15 100 1e6 ];
+x = [1e-8 1e-2 1e7 1.5e8 1e7 1e7 1e6 1e6 10 5 1e4];
+d1=0;
+d2=8;
+d3= 8;
+d4= 8;
+td = [tdata(n1:m1); tdata(n2:m2); tdata(n3:m3); tdata(n4:m4)];
+Tdata = [Tdata1(n1:m1); Tdata2(n2:m2); Tdata3(n3:m3); Tdata4(n4:m4)];
+
+    
+   x = lsqcurvefit(@(x, td) cost_function(x, tdata, n1, n2, n3,n4, m1, m2, m3,m4, [d1, d2, d3,d4]), x, td, Tdata, lb, ub,...
+    optimset('Disp', 'iter', 'TolX', 10^(-15), 'TolFun', 10^(-15)));
+
+    
+    cost_value = cost_function(x, tdata, n1, n2, n3,n4, m1, m2, m3,m4,[d1, d2, d3,d4]);
+    Rd = norm(cost_value - Tdata) / norm(Tdata);
+    % Calculate the Gaussian norm (L2 norm) for error calculation
+    error = cost_value - Tdata;
+    gaussian_norm = sqrt(sum(error.^2));
+    
+    % Normalize the Gaussian norm
+    Tdata_norm = norm(Tdata);
+    Rd2 = gaussian_norm / Tdata_norm;
+    
+    %--------------------------------------------------------------------------
+    % PARAMETER ESTIMATION - ODE23S AND LSQCURVE FIT
+    %--------------------------------------------------------------------------
+    disp('____________________________________________________________________________________________________')
+    disp('..alpha..Beta...lambda...S2...c1...c2...c3...c4..d1...d2...d3...d4...m0. Rd..')
+    disp('____________________________________________________________________________________________________')
+    
+    % CREATION OF THE VECTOR FOR OUTPUT
+    fprintf('%10.10f %10.10f %10.5f %10.10f %10.10f %10.5f %10.10f %10.10f %10.10f %10.5f %10.10f %10.5f %10.5f %10.5f\n', ...
+        x(1), x(2), x(3), x(4), x(5), x(6), x(7), x(8),x(9),x(10),x(11), Rd);
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Calculate AIC and BIC %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+residuals = cost_value - Tdata;
+n_total = numel(Tdata);
+num_params = numel(x);
+AIC = n_total * log(sum(residuals.^2) / n_total) + 2 * num_params;
+BIC = n_total * log(sum(residuals.^2) / n_total) + num_params * log(n_total);
+
+% Display the AIC and BIC values
+fprintf('AIC: %.2f\n', AIC);
+fprintf('BIC: %.2f\n', BIC);
+fprintf('Rd: %.2f\n', Rd);
+error1 = cost_value(1:m1-n1+1) - Tdata1(n1:m1);
+error2 = cost_value(m1-n1+2:m1-n1+m2-n2+2) - Tdata2(n2:m2);
+error3 = cost_value(m1-n1+m2-n2+3:m1-n1+m2-n2+m3-n3+3) - Tdata3(n3:m3);
+error4 = cost_value(m1-n1+m2-n2+m3-n3+4:m1-n1+m2-n2+m3-n3+m4-n4+4) - Tdata4(n4:m4);
+
+% Calculate the standard deviation from error values
+std_dev1 = std(error1);
+std_dev2 = std(error2);
+std_dev3 = std(error3);
+std_dev4 = std(error4);
+%--------------------------------------------------------------------
+  % color options
+color2 = [0.8, 0.2, 0.2];  
+color4 = [0.2, 0.6, 0.2]; 
+color3 = [0.2, 0.2, 0.6];  
+color1 = [0.2, 0.2, 0.2];                     
+                    
+figure1 = figure;
+set(figure1, 'Position', [100, 100, 800, 400]); 
+errorbar(tdata(n1:m1), Tdata1(n1:m1), st1(m1:n1), 'o', 'Color', color1, 'MarkerSize', 8, 'MarkerFaceColor', color1, 'LineStyle', 'none', 'CapSize', 3, 'LineWidth', 1.5);
+hold on;
+plot(tdata(n1:m1), cost_value(1:m1-n1+1), '-', 'Color', color1, 'LineWidth', 2.5);
+
+errorbar(tdata(n2:m2), Tdata2(n2:m2), st2(n2:m2), 'o', 'Color', color2, 'MarkerSize', 8, 'MarkerFaceColor', color2, 'LineStyle', 'none', 'CapSize', 3, 'LineWidth', 1.5);
+plot(tdata(n2:m2), cost_value(m1-n1+2:m1-n1+m2-n2+2), '-', 'Color', color2, 'LineWidth', 2.5);
+
+errorbar(tdata(n3:m3), Tdata3(n3:m3), st3(n3:m3), 'o', 'Color', color3, 'MarkerSize', 8, 'MarkerFaceColor', color3, 'LineStyle', 'none', 'CapSize', 3, 'LineWidth', 1.5);
+plot(tdata(n3:m3), cost_value(m1-n1+m2-n2+3:m1-n1+m2-n2+m3-n3+3), '-', 'Color', color3, 'LineWidth', 2.5);
+
+errorbar(tdata(n4:m4), Tdata4(n4:m4), st4(n4:m4), 'o', 'Color', color4, 'MarkerSize', 8, 'MarkerFaceColor', color4, 'LineStyle', 'none', 'CapSize', 3, 'LineWidth', 1.5);
+plot(tdata(n4:m4), cost_value(m1-n1+m2-n2+m3-n3+4:m1-n1+m2-n2+m3-n3+m4-n4+4), '-', 'Color', color4, 'LineWidth', 2.5);
+
+
+grid on;
+
+ylim([-0.7e8, 1.6e9]);
+xlim([6, 30]);
+
+legend('No radiation', 'Model fitting ', '8Gy radiation  ','Model fitting','8Gy + i.t BMDM ','Model fitting' ,'8Gy+ i.t SIRPA BMDM ','Model fitting' ,'Location', 'westoutside', 'FontSize', 20);
+
+xlabel('\fontsize{17}Time (days)');
+ylabel('\fontsize{17}Tumor cells population');
+
+% Display the figure
+figure(figure1);
+
+saveas(gcf, 'mm20.jpg', 'jpeg');
+
+function dydt = g1(t, y, x, d)
+    dydt = zeros(2,1);
+    t0 = d/1.2;
+    if (d == 0)
+        u = 1;
+    else
+          u=2*(2.558775384581*t0+ exp(-2.558775384581*t0)- 1)/((2.558775384581^2)*t0*t0);
+    end
+      
+       S1=exp(-0.005147638197*d - 0.006577733464*d*d*u);
+   
+    dydt(1) = 0.453709396815* y(1) * (1 - y(1) /1759812730.672900915146) -0.000000044133* y(1) * y(2);
+    dydt(2) =16338.485039659030 -   0.069125930809* y(2) - 0.000000001991* y(1) * y(2);
+   
+    if (t >= 12 )
+
+        dydt(1) = dydt(1)*S1 ;
+        dydt(2) = dydt(2);
+       
+    else
+        dydt(1) = dydt(1);
+        dydt(2) = dydt(2);
+        
+    end
+end
+function dydt = g2(t, y, x, d)
+    dydt = zeros(3,1);
+    t0 = d/1.2;
+    if (d == 0)
+        u = 1;
+    else
+         u=2*(2.558775384581*t0+ exp(-2.558775384581*t0)- 1)/((2.558775384581^2)*t0*t0);
+    end
+      
+       S1=exp(-0.005147638197*d - 0.006577733464*d*d*u);
+   
+    dydt(1) = 0.453709396815* y(1) * (1 - y(1) /1759812730.672900915146) -x(1)* y(1) * y(2)-0.000000907400*y(1)*y(3);
+    dydt(2) =16338.485039659030 -   0.069125930809* y(2) - 0.000000001991* y(1) * y(2);
+    dydt(3) = 0.000000439623   -0.394943790649 *y(3)-0.000000815338*y(1)*y(3);
+
+   if (t >= 12 )
+
+        dydt(1) = dydt(1)*S1 - dydt(1)*(1-S1)*x(9);
+        dydt(2) = dydt(2);
+        dydt(3) = dydt(3);
+    
+    else
+        dydt(1) = dydt(1);
+        dydt(2) = dydt(2);
+        dydt(3) = dydt(3);
+    end
+end
+
+function cost = cost_function(x, tdata, n1, n2, n3, n4, m1, m2, m3, m4, d)
+    [~, Y1_common] = ode23s(@(t, y) g1(t, y, x, d(1)), tdata(n1:m1), [x(3); x(7)]);
+    [~, Y2_common] = ode23s(@(t, y) g1(t, y, x, d(2)), tdata(n2:m2), [x(4); x(7)]);
+    [~, Y3_common] = ode23s(@(t, y) g2(t, y, x, d(1)), tdata(n3:m3), [x(5); x(11); x(8)]);
+    [~, Y4_common] = ode23s(@(t, y) g2(t, y, x, d(2)), tdata(n4:m4), [x(6); x(11); x(8)]);
+
+    % Concatenate the sums into a single vector
+    cost = [Y1_common(:, 1) + Y1_common(:, 2) ;
+            Y2_common(:, 1) + Y2_common(:, 2) ;
+            Y3_common(:, 1) + Y3_common(:, 2) + Y3_common(:, 3);
+            Y4_common(:, 1) + Y4_common(:, 2) + Y4_common(:, 3)];
+
+    %  size of the cost matches the size of Tdata
+    assert(size(cost, 1) == size(tdata(n1:m1), 1) + size(tdata(n2:m2), 1) + size(tdata(n3:m3), 1) + size(tdata(n4:m4), 1), 'Inconsistent dimensions');
+end
